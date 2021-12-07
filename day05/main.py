@@ -30,17 +30,25 @@ class Line:
     def points(self) -> set[Point]:
         # return points in between start - end(inclusive)
         lst = set()
-        print(self.start, self.end)
         m0 = self.end.y - self.start.y
         m1 = self.end.x - self.start.x
         min_x, min_y = self.min()
         max_x, max_y = self.max()
-        for x in range(min_x, max_x + 1):
-            if ((x - self.start.x) * m0) % m1 == 0:
-                y = ((x - self.start.x) * m0 // m1) + self.start.y
-                if y >= min_y and y <= max_y:
-                    lst.add(Point(x, y))
+        if m1 == 0:
+            for y in range(min_y, max_y + 1):
+                lst.add(Point(self.end.x, y))
+        else:
+            for x in range(min_x, max_x + 1):
+                if ((x - self.start.x) * m0) % m1 == 0:
+                    y = ((x - self.start.x) * m0 // m1) + self.start.y
+                    if y >= min_y and y <= max_y:
+                        lst.add(Point(x, y))
         return lst
+
+    def is_diagonal(self):
+        m0 = self.end.y - self.start.y
+        m1 = self.end.x - self.start.x
+        return abs(m0) == abs(m1)
 
     def min(self) -> tuple[int, int]:
         # return (min of x, min of y)
@@ -78,10 +86,14 @@ class Grid:
             for row in self.grids]
         )
 
-    def intersection(self):
+    def intersection(self, all_lines=False):
         for line in self.lines:
-            for point in line.points():
-                self.grids[point.y][point.x] += 1
+            if line.is_diagonal() or line.start.x == line.end.x or line.start.y == line.end.y:
+                for point in line.points():
+                    self.grids[point.y][point.x] += 1
+
+    def count_points(self):
+        return sum([1 for row in self.grids for cell in row if cell > 1])
 
 
 def parse_line(line) -> Line:
@@ -93,10 +105,18 @@ def prob1(filename):
     with open(filename) as f:
         lines = [parse_line(line) for line in f]
         grid = Grid(lines)
-        grid.intersection()
-        print(grid)
+        grid.intersection(all_lines=False)
+        print(grid.count_points())
+
+
+def prob2(filename):
+    with open(filename) as f:
+        lines = [parse_line(line) for line in f]
+        grid = Grid(lines)
+        grid.intersection(all_lines=False)
+        print(grid.count_points())
 
 
 if __name__ == '__main__':
     assert len(sys.argv) >= 2
-    prob1(sys.argv[1])
+    prob2(sys.argv[1])
